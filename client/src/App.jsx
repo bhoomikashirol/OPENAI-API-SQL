@@ -1,33 +1,45 @@
+import styles from "./styles.module.css";
+import sqlServer from "./assets/sql-server.png";
 import { useState } from "react";
-import sqlLogo from './assets/sql-logo.png'
-import styles from './index.module.css'
 
-function App(){
-  const [count, setCount] = useState(0)
-  const [queryDescription, setQueryDescription] = useState("")
+export default function App() {
+  const [userPrompt, setUserPrompt] = useState("");
+  const [sqlQuery, setSqlQuery] = useState("");
 
-  const onSubmit =(e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("form submitted: ", queryDescription);
-  }
-  return(
-  <main className={styles.main}>
-    <img src={sqlLogo} alt="" className={styles.icon}></img>
-    <h3>Generate SQL with AI</h3>
+    const query = await generateQuery();
+    setSqlQuery(query);
+  };
 
-    <form onSubmit={onSubmit}>
-      <input type="text"
-      name="query-description"
-      placeholder="Describe your query"
-      onChange ={(e)=>  setQueryDescription(e.target.value)}>
+  const generateQuery = async () => {
+    const response = await fetch("http://localhost:3005/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ queryDescription: userPrompt }),
+    });
 
-      </input>
-      
-      <input type = "submit" value="Generate query"/>
-    </form>
+    const data = await response.json();
+    return data.sqlQuery.trim();
+  };
 
-  </main>
-)
+  return (
+    <main className={styles.main}>
+      <img src={sqlServer} className={styles.icon} alt="SQL server" />
+      <h3>Generate SQL from AI</h3>
+      <form onSubmit={onSubmit}>
+        <input
+          type="text"
+          name="query-description"
+          placeholder="Describe your query"
+          value={userPrompt}
+          onChange={(e) => setUserPrompt(e.target.value)}
+        />
+        <input type="submit" value="Generate query" />
+      </form>
+      <pre>{sqlQuery}</pre>
+    </main>
+  );
 }
-
-export default App
